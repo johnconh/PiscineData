@@ -24,6 +24,21 @@ services:
     networks:
       - docker_network
 
+  python:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: python
+    restart: always
+    env_file:
+      - ../.env
+    volumes:
+      - .././customer:/app/csv
+      - ./:/app
+    working_dir: /app
+    networks:
+      - docker_network
+
 volumes:
   postgres_data:
 
