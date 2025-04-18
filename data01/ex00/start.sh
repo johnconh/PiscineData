@@ -7,6 +7,7 @@ LOGFILE="/app/log.txt"
 
 SCRIPTS=(
   "ex01/customers_table.py"
+  "ex02/remove_duplicates.py"
 )
 
 echo "=== $(date '+%Y-%m-%d %H:%M:%S') — Iniciando ejecución de scripts ===" | tee -a "$LOGFILE"

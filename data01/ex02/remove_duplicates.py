@@ -116,9 +116,9 @@ def main():
     conn = create_connection()
 
     try:
-        create_tables_from_csv(conn)
-        create_customers_table(conn)
-        merge_tables_into_customers(conn)
+        # create_tables_from_csv(conn)
+        # create_customers_table(conn)
+        # merge_tables_into_customers(conn)
         move_and_delete_duplicates_temp_table(conn)
         print("🚀 All operations completed successfully.")
     except Exception as e:
