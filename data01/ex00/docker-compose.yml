@@ -9,6 +9,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - .././customer:/csv
     networks:
       - docker_network
 
@@ -20,6 +21,20 @@ services:
       - "8080:8080"
     depends_on:
       - postgres
+    networks:
+      - docker_network
+
+  python:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: python
+    restart: no
+    env_file:
+      - ../.env
+    volumes:
+      - .././:/app
+    working_dir: /app
     networks:
       - docker_network
 

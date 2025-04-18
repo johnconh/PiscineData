@@ -3,6 +3,12 @@ all: up
 up:
 	docker compose up -d
 
+exec:
+	docker exec -it python bash
+
+postgres:
+	-docker exec -it postgres psql -U jdasilva -d piscineds -h localhost -W
+
 down:
 	docker compose -f docker-compose.yml down --rmi all --remove-orphans -v;
 
@@ -13,4 +19,4 @@ clean: down
 log:
 	docker logs -f postgres
 
-.PHONY: all up down clean log
+.PHONY: all up down clean log volume exec postgres
