@@ -12,20 +12,45 @@ DB_PARAMS = {
     "port":  5432
 }
 
-CSV_DIR = "../customer"  
+CSV_DIR = "/app/customer" 
+ITEM_DIR = "/app/item"
 
 def create_connection():
     return psycopg2.connect(**DB_PARAMS)
 
-def create_tables_from_csv(conn):
+def create_table_from_item(conn):
+    with conn.cursor() as cursor:
+        cursor.execute("""
+            DROP TABLE IF EXISTS item;
+            CREATE TABLE item (
+                product_id INTEGER,
+                category_id BIGINT,
+                category_code TEXT,
+                brand TEXT
+            );
+        """)
+        conn.commit()
+
+        file_path = os.path.join(ITEM_DIR, "item.csv")
+        with open(file_path, 'r') as f:
+            cursor.copy_expert("""
+                COPY item (product_id, category_id, category_code, brand)
+                FROM STDIN
+                WITH CSV HEADER
+            """, f)
+        conn.commit()
+        print("✅ Data from item.csv successfully loaded into item.")
+
+def create_tables_from_customer(conn):
     with conn.cursor() as cursor:
         for filename in os.listdir(CSV_DIR):
             if filename.endswith(".csv"):
                 table_name = filename.replace(".csv", "")
-                print(f"Creating table {table_name}...")
+                print(f"🛠️ Creating table {table_name}...")
 
                 cursor.execute(f"""
-                    CREATE TABLE IF NOT EXISTS {table_name} (
+                    DROP TABLE IF EXISTS {table_name};
+                    CREATE TABLE {table_name} (
                         event_time TIMESTAMP NOT NULL,
                         event_type TEXT,
                         product_id INTEGER,
@@ -44,19 +69,19 @@ def create_tables_from_csv(conn):
                         WITH CSV HEADER
                     """, f)
                 conn.commit()
-                print(f"Data from {filename} successfully loaded into {table_name}.")
+                print(f"✅ Data from {filename} successfully loaded into {table_name}.")
 
 def create_customers_table(conn):
     with conn.cursor() as cursor:
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS customers (
+            DROP TABLE IF EXISTS customers;
+            CREATE TABLE customers (
                 event_time TIMESTAMP NOT NULL,
                 event_type TEXT,
                 product_id INTEGER,
                 price MONEY,
                 user_id BIGINT,
-                user_session UUID,
-                source_table TEXT
+                user_session UUID
             );
         """)
         conn.commit()
@@ -72,25 +97,30 @@ def merge_tables_into_customers(conn):
 
         for table in tables:
             table_name = table[0]
-            print(f"Merging data from {table_name} into 'customers'...")
+            print(f"🔄 Merging data from {table_name} into 'customers'...")
 
             cursor.execute(f"""
-                INSERT INTO customers (event_time, event_type, product_id, price, user_id, user_session, source_table)
-                SELECT event_time, event_type, product_id, price, user_id, user_session, '{table_name}' 
+                INSERT INTO customers (event_time, event_type, product_id, price, user_id, user_session)
+                SELECT event_time, event_type, product_id, price, user_id, user_session 
                 FROM {table_name};
             """)
             conn.commit()
-            print(f"Data from {table_name} successfully merged.")
+            print(f"✅ Data from {table_name} successfully merged.")
 
 def main():
     conn = create_connection()
 
     try:
-        create_tables_from_csv(conn)
+        create_table_from_item(conn)
+        print("✅ Item table created successfully.")
+        create_tables_from_customer(conn)
+        print("✅ All customer tables created successfully.")
+        print("🛠️ Creating customers table...")
         create_customers_table(conn)
         merge_tables_into_customers(conn)
+        print("✅ All data merged into customers table successfully.")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"❌ An error occurred: {e}")
     finally:
         conn.close()
 
