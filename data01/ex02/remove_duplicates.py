@@ -22,8 +22,8 @@ def move_and_delete_duplicates_temp_table(conn):
     print("\n🧹 Removing duplicates...")
     with conn.cursor() as cursor:
         cursor.execute("""
-            CREATE TEMPORARY TABLE temp_cleaned_table AS
-            WITH ranked_events AS (
+            CREATE TEMPORARY TABLE temp_table AS
+            WITH table_events AS (
                 SELECT
                     event_time,
                     event_type,
@@ -34,7 +34,7 @@ def move_and_delete_duplicates_temp_table(conn):
                     ROW_NUMBER() OVER (
                         PARTITION BY event_type, product_id
                         ORDER BY event_time
-                    ) AS exact_dup_rank,
+                    ) AS row_num,
                     LAG(event_time) OVER (
                         PARTITION BY event_type, product_id
                         ORDER BY event_time
@@ -43,9 +43,9 @@ def move_and_delete_duplicates_temp_table(conn):
             )
             SELECT
                 event_time, event_type, product_id, price, user_id, user_session
-            FROM ranked_events
+            FROM table_events
             WHERE
-                exact_dup_rank = 1
+                row_num = 1
             OR
                 (prev_time IS NOT NULL AND (event_time - prev_time > INTERVAL '1 second'));
         """)
@@ -54,7 +54,7 @@ def move_and_delete_duplicates_temp_table(conn):
         print("🗑️ Original customers table truncated.")
         cursor.execute("""
             INSERT INTO customers
-            SELECT * FROM temp_cleaned_table
+            SELECT * FROM temp_table
         """)
         conn.commit()
         print("✅ Cleaned data inserted back into customers table.")
