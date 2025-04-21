@@ -13,8 +13,6 @@ DB_PARAMS = {
     "port":  5432
 }
 
-CSV_DIR = "csv/"  
-
 def create_connection():
     return psycopg2.connect(**DB_PARAMS)
 
