@@ -17,7 +17,7 @@ run-ex02:
 	@read key
 
 run-ex03:
-	@docker-compose run --rm python python /app/ex03/insert_data.py
+	@docker-compose run --rm python python /app/ex03/fusion.py
 
 run-all: run-ex01 run-ex02 run-ex03
 	@echo "Todos los archivos se han ejecutado correctamente."
