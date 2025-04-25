@@ -41,5 +41,7 @@ clean: down
 log:
 	@docker logs -f postgres
 
+flog:
+	@docker logs jupyter 2>&1 | grep -Eo 'http://127\.0\.0\.1:8888/\S+token=\S+' | tail -n 1
 
 .PHONY: all up down clean log postgres run-ex00 run-ex01 run-ex02 run-ex03 run-all warehouse

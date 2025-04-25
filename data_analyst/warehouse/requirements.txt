@@ -6,3 +6,4 @@ jupytext
 seaborn
 pandas
 sqlalchemy
+scikit-learn
